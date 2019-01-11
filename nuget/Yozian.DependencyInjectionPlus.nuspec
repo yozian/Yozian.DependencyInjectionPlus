@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>Yozian.DependencyInjectionPlus</id>
+    <version>0.0.0</version>
+    <authors>yozian</authors>
+    <owners>yozian</owners>
+    <license type="expression">MIT</license>
+    <projectUrl>https://github.com/yozian/Yozian.DependencyInjectionPlus</projectUrl>
+    <iconUrl>https://no_icon_url_here</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Easy for DI register, auto register services, decorate service with attribute</description>
+    <releaseNotes></releaseNotes>
+    <copyright>Copyright Ⓒ yozian 2019</copyright>
+    <tags>di auto register attribute</tags>
+    <dependencies>
+      <dependency id="Yozian.Extension" version="1.*" />
+      <dependency id="Microsoft.Extensions.DependencyInjection" version="[1.1,2.2)" />
+    </dependencies>
+    <repository type="git" commit="" url="https://github.com/yozian/Yozian.DependencyInjectionPlus"></repository>
+  </metadata>
+</package>

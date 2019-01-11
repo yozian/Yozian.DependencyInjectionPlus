@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\src\Yozian.DependencyInjectionPlus\Yozian.DependencyInjectionPlus.csproj" />
+    <ProjectReference Include="..\Yozian.DependencyInjectionPlus\Yozian.DependencyInjectionPlus.csproj" />
   </ItemGroup>
 
 </Project>

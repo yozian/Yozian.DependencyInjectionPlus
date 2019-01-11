@@ -15,30 +15,51 @@
 
 ```csharp
 
-            // 1. register services
-            services.RegisterServices();
+        // 1. register services
+        services.RegisterServices();
 
-            // 2. register services only in those assmbly name start with "DependencyInjectionSample"
-            services.RegisterServices("DependencyInjectionSample");
-
-
-            // 3. register services and has some condition
-            services.RegisterServices("", type =>
-            {
-                return type.Name.Contains("Service");
-            });
+        // 2. register services only in those assmbly name start with "DependencyInjectionSample"
+        services.RegisterServices("DependencyInjectionSample");
 
 
-            // 4. regiter services for specify assembly
-            services.RegisterServicesOfAssembly(new { }.GetType().Assembly);
+        // 3. register services and has some condition
+        services.RegisterServices("", type =>
+        {
+            return type.Name.Contains("Service");
+        });
+
+
+        // 4. regiter services for specify assembly
+        services.RegisterServicesOfAssembly(new { }.GetType().Assembly);
 
 ```
 
-## Decoreated Service
+## Decorated Service
 
 ```csharp
 
     [TransientService]
+    public class DemoService
+    {
+
+        public void ShowTime()
+        {
+            Console.WriteLine(DateTime.Now.ToString());
+        }
+    }
+
+    [ScopedService]
+    public class DemoService
+    {
+
+        public void ShowTime()
+        {
+            Console.WriteLine(DateTime.Now.ToString());
+        }
+    }
+
+
+    [SingletonService]
     public class DemoService
     {
 
@@ -71,7 +92,9 @@ Provide one or more interface types
 ```
 
 
-## Output registered types in STD
+## Output registered types in STD out
+
+DependencyInjectionSample project shows
 
 ```
 Register Transient Services , Total: 1

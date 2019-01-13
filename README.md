@@ -2,18 +2,24 @@
 
 # Features
 
-* Globally auto register services
-* Decorate service with attribute
-* Auto register service with implement Type also with provided interfaces
-* Register services for specify assembly
-* Register services for specify assembly prefix name
-* Service's type register filter
+* Write Once, Register all.
+* Register services globally which decorated by attributes(TransientService, ScopedService, SingletonService)
+* Auto register service with implement Type also with provided interfaces.
+* Register services for specify assembly.
+* Service's type filter while regstering.
+* Register method is an extension method on IServiceColletion
 
 # Example
 
 ## Register for once
 
 ```csharp
+    
+    // sample for .net core 
+     public void ConfigureServices(IServiceCollection services)
+     {
+        // just choose one of them to fit your scenario
+
 
         // 1. register services
         services.RegisterServices();
@@ -31,6 +37,7 @@
 
         // 4. regiter services for specify assembly
         services.RegisterServicesOfAssembly(new { }.GetType().Assembly);
+    }
 
 ```
 

@@ -14,7 +14,7 @@
     <copyright>Copyright Ⓒ yozian 2019</copyright>
     <tags>di auto register attribute</tags>
     <dependencies>
-      <dependency id="Yozian.Extension" version="[1.*,2.0.1)" />
+      <dependency id="Yozian.Extension" version="2.*" />
       <dependency id="Microsoft.Extensions.DependencyInjection" version="[1.1,2.2)" />
     </dependencies>
     <repository type="git" commit="" url="https://github.com/yozian/Yozian.DependencyInjectionPlus"></repository>

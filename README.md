@@ -8,6 +8,7 @@
 * Register services for specify assembly.
 * Service's type filter while regstering.
 * Register method is an extension method on IServiceColletion
+* Register services with specify environments
 
 # Example
 
@@ -86,6 +87,26 @@ Provide one or more interface types
 ```csharp
 
     [ScopedService(typeof(IWorker), typeof(IDriver))]
+    public class WorkService : IWorker, IDriver
+    {
+        public void DoWork()
+        {
+            Console.WriteLine(nameof(this.DoWork));
+        }
+
+        public void Drive() => throw new NotImplementedException();
+    }
+
+```
+
+
+## Decoreated service with actived Environments
+
+Register only in Developement & Staging environment(by Environment variable "ASPNETCORE_ENVIRONMENT")
+
+```csharp
+
+    [ScopedService("Developement,Staging")]
     public class WorkService : IWorker, IDriver
     {
         public void DoWork()

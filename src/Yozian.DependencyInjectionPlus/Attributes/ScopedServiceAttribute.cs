@@ -24,6 +24,18 @@ namespace Yozian.DependencyInjectionPlus.Attributes
             this.ServiceTypes = serviceType;
         }
 
+        public ScopedServiceAttribute(string activeEnvs, params Type[] serviceType)
+           : this(serviceType)
+        {
+            this.ActiveEnvs = activeEnvs;
+        }
+
+        public ScopedServiceAttribute(string activeEnvs)
+            : this()
+        {
+            this.ActiveEnvs = activeEnvs;
+        }
+
         public ScopedServiceAttribute()
         {
             this.DiScope = DiScope.Scoped;

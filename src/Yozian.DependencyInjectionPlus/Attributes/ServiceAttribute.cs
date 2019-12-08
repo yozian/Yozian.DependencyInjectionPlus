@@ -10,5 +10,7 @@ namespace Yozian.DependencyInjectionPlus.Attributes
         internal DiScope DiScope { get; set; }
 
         public IEnumerable<Type> ServiceTypes { get; protected set; }
+
+        public string ActiveEnvs { get; protected set; }
     }
 }

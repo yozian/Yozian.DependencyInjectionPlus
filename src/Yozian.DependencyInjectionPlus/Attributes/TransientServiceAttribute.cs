@@ -24,6 +24,18 @@ namespace Yozian.DependencyInjectionPlus.Attributes
             this.ServiceTypes = serviceType;
         }
 
+        public TransientServiceAttribute(string activeEnvs, params Type[] serviceType)
+            : this(serviceType)
+        {
+            this.ActiveEnvs = activeEnvs;
+        }
+
+        public TransientServiceAttribute(string activeEnvs)
+            : this()
+        {
+            this.ActiveEnvs = activeEnvs;
+        }
+
         public TransientServiceAttribute()
         {
             this.DiScope = DiScope.Transient;

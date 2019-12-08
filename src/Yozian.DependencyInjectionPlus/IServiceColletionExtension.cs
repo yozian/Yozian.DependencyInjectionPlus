@@ -54,6 +54,11 @@ namespace Yozian.DependencyInjectionPlus
 
         private static void registerTypes(IServiceCollection container, IEnumerable<Type> types)
         {
+            var notSpecifyEnv = "not-specified-env";
+            var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? notSpecifyEnv;
+
+            Console.WriteLine($"DI Process Env: {env}");
+
             types
             .Select(t =>
              {
@@ -63,14 +68,37 @@ namespace Yozian.DependencyInjectionPlus
 
                  var attr = t.GetCustomAttribute(attrType, false) as ServiceAttribute;
 
+                 var targetEnvs = attr.ActiveEnvs
+                    .SafeToString()
+                    .Split(",")
+                    .Where(x => !string.IsNullOrEmpty(x))
+                    .ToList();
+
+                 // available for non-specified env
+                 var isActive = notSpecifyEnv.Equals(env);
+
+                 if (!string.IsNullOrEmpty(env)
+                    && !notSpecifyEnv.Equals(env)
+                    && targetEnvs.Count > 0)
+                 {
+                     isActive = targetEnvs.Contains(env);
+                 }
+                 else
+                 {
+                     // those no target env should be registered
+                     isActive = true;
+                 }
+
                  return new
                  {
                      ServiceImplementType = t,
                      DiAttribute = attrType,
                      DiScope = attr.DiScope,
-                     Interfaces = attr?.ServiceTypes
+                     Interfaces = attr?.ServiceTypes,
+                     IsActive = isActive
                  };
              })
+            .Where(x => x.IsActive)
             .GroupBy(x => x.DiScope)
             .OrderBy(x => x.Key)
             .ForEach(g =>

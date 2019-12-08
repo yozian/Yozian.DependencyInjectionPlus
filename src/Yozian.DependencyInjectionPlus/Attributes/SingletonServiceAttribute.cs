@@ -24,6 +24,18 @@ namespace Yozian.DependencyInjectionPlus.Attributes
             this.ServiceTypes = serviceType;
         }
 
+        public SingletonServiceAttribute(string activeEnvs, params Type[] serviceType)
+            : this(serviceType)
+        {
+            this.ActiveEnvs = activeEnvs;
+        }
+
+        public SingletonServiceAttribute(string activeEnvs)
+            : this()
+        {
+            this.ActiveEnvs = activeEnvs;
+        }
+
         public SingletonServiceAttribute()
         {
             this.DiScope = DiScope.Singleton;

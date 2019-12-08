@@ -15,6 +15,9 @@ namespace Yozian.DependencyInjectionPlusTest
         [SetUp]
         public void Setup()
         {
+
+            Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Production");
+
             var continaer = new ServiceCollection();
             continaer.RegisterServices(
                 "Yozian.DependencyInjectionPlusTest", // leave empty for all assemblies loaded!
@@ -132,6 +135,29 @@ namespace Yozian.DependencyInjectionPlusTest
                     );
                 }
             );
+        }
+
+        [Test]
+        public void SpecifyEnvActiveDevTest()
+        {
+            var svc = provider.GetService<MySpecifyEnvDevService>();
+
+            svc.DoWork();
+
+        }
+
+        [Test]
+        public void SpecifyEnvNonActiveTest()
+        {
+
+            Assert.Throws<NullReferenceException>(() =>
+            {
+                var svc = provider.GetService<MySpecifyEnvStagingService>();
+
+                svc.DoWork();
+
+            });
+
         }
     }
 }

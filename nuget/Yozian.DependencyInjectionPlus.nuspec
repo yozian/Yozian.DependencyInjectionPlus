@@ -12,7 +12,7 @@
     <description>Easy for DI register, auto register services, decorate service with attribute</description>
     <releaseNotes></releaseNotes>
     <copyright>Copyright Ⓒ yozian 2019</copyright>
-    <tags>di auto register attribute</tags>
+    <tags>DI Auto Register By Attribute</tags>
     <dependencies>
       <dependency id="Yozian.Extension" version="2.*" />
       <dependency id="Microsoft.Extensions.DependencyInjection" version="[1.1,4)" />

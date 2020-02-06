@@ -6,7 +6,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.0" />
-    <PackageReference Include="Yozian.Extension" Version="2.1.3" />
+    <PackageReference Include="Yozian.Extension" Version="2.2.0" />
   </ItemGroup>
 
 </Project>

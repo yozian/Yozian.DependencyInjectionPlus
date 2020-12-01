@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Yozian.DependencyInjectionPlus.Attributes;
 using Yozian.DependencyInjectionPlus.Exceptions;
 using Yozian.DependencyInjectionPlus.Utility;
@@ -16,14 +17,14 @@ namespace Yozian.DependencyInjectionPlus
         /// <summary>
         ///
         /// </summary>
-        /// <param name="this"></param>
         /// <param name="assemblyPrefix">filter out the matched assemblies</param>
         /// <param name="filter">determin which service type should be regitered</param>
         /// <returns></returns>
         public static IServiceCollection RegisterServices(
            this IServiceCollection @this,
            string assemblyPrefix = "",
-           Func<Type, bool> filter = null
+           Func<Type, bool> filter = null,
+           ILogger logger = null
            )
         {
             var types = AssemblyHelper.GetAllTypesByBaseAttribute<ServiceAttribute>(assemblyPrefix)
@@ -31,15 +32,23 @@ namespace Yozian.DependencyInjectionPlus
                   .WhereWhen(null != filter, t => filter(t))
                   .AsEnumerable();
 
-            registerTypes(@this, types);
+            registerTypes(@this, types, logger);
 
             return @this;
         }
 
+        /// <summary>
+        ///  scan services with di attributes in the assembly
+        /// </summary>
+        /// <param name="assembly"></param>
+        /// <param name="filter">determin which service type should be regitered</param>
+        /// <param name="logger"></param>
+        /// <returns></returns>
         public static IServiceCollection RegisterServicesOfAssembly(
            this IServiceCollection @this,
            Assembly assembly,
-           Func<Type, bool> filter = null
+           Func<Type, bool> filter = null,
+            ILogger logger = null
            )
         {
             var types = AssemblyHelper.GetAllTypesByAttribute<ServiceAttribute>(assembly)
@@ -47,17 +56,17 @@ namespace Yozian.DependencyInjectionPlus
                   .WhereWhen(null != filter, t => filter(t))
                   .AsEnumerable();
 
-            registerTypes(@this, types);
+            registerTypes(@this, types, logger);
 
             return @this;
         }
 
-        private static void registerTypes(IServiceCollection container, IEnumerable<Type> types)
+        private static void registerTypes(IServiceCollection container, IEnumerable<Type> types, ILogger logger)
         {
             var notSpecifyEnv = "not-specified-env";
             var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? notSpecifyEnv;
 
-            Console.WriteLine($"DI Process Env: {env}");
+            logger?.LogInformation($"DI Process Env: {env}");
 
             types
             .Select(t =>
@@ -120,9 +129,9 @@ namespace Yozian.DependencyInjectionPlus
                         break;
                 }
 
-                Console.WriteLine($"Register {g.Key} Services , Total: {g.Count()}");
+                logger?.LogInformation($"Register {g.Key} Services , Total: {g.Count()}");
 
-                Console.WriteLine($"\t [ConcretType : SerivceTypes]");
+                logger?.LogInformation($"\t [ConcretType : SerivceTypes]");
 
                 g.ForEach((x, num) =>
                 {
@@ -153,7 +162,7 @@ namespace Yozian.DependencyInjectionPlus
                     .Concat((x.Interfaces ?? new List<Type>()).Select(i => i.Name))
                     .ToList();
 
-                    Console.WriteLine($"\t ({(num + 1)}) {x.ServiceImplementType.Name}: {string.Join(", ", reigsterTypes)}");
+                    logger?.LogInformation($"\t ({(num + 1)}) {x.ServiceImplementType.Name}: {string.Join(", ", reigsterTypes)}");
                 });
             });
         }

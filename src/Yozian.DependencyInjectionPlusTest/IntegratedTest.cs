@@ -1,6 +1,9 @@
 using System;
 using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Console;
+using Microsoft.Extensions.Options;
 using NUnit.Framework;
 using Yozian.DependencyInjectionPlus;
 using Yozian.DependencyInjectionPlus.Exceptions;
@@ -12,6 +15,8 @@ namespace Yozian.DependencyInjectionPlusTest
     {
         private ServiceProvider provider;
 
+        ILogger logger;
+
         [SetUp]
         public void Setup()
         {
@@ -19,13 +24,21 @@ namespace Yozian.DependencyInjectionPlusTest
             Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Production");
 
             var continaer = new ServiceCollection();
+            ILoggerFactory loggerFactory = LoggerFactory.Create((options) => {
+                options.AddConsole();
+            });
+
+
+            this.logger = loggerFactory.CreateLogger<IntegratedTest>();
+
             continaer.RegisterServices(
                 "Yozian.DependencyInjectionPlusTest", // leave empty for all assemblies loaded!
                 t => // leave empty for all types with specify attribute to be registered
                 {
                     // filter the type you want
                     return t.Name.Contains("Service");
-                }
+                },
+                this.logger
             );
 
             provider = continaer.BuildServiceProvider();

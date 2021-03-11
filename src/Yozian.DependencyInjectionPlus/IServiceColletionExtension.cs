@@ -12,7 +12,7 @@ using Yozian.Extension;
 
 namespace Yozian.DependencyInjectionPlus
 {
-    public static class IServiceColletionExtension
+    public static class IServiceCollectionExtension
     {
         /// <summary>
         ///
@@ -41,7 +41,7 @@ namespace Yozian.DependencyInjectionPlus
         ///  scan services with di attributes in the assembly
         /// </summary>
         /// <param name="assembly"></param>
-        /// <param name="filter">determin which service type should be regitered</param>
+        /// <param name="filter">determine which service type should be regitered</param>
         /// <param name="logger"></param>
         /// <returns></returns>
         public static IServiceCollection RegisterServicesOfAssembly(
@@ -77,9 +77,9 @@ namespace Yozian.DependencyInjectionPlus
 
                  var attr = t.GetCustomAttribute(attrType, false) as ServiceAttribute;
 
-                 var targetEnvs = attr.ActiveEnvs
+                 var targetEnvs = attr?.ActiveEnvs
                     .SafeToString()
-                    .Split(",")
+                    .Split(',')
                     .Where(x => !string.IsNullOrEmpty(x))
                     .ToList();
 
@@ -88,7 +88,7 @@ namespace Yozian.DependencyInjectionPlus
 
                  if (!string.IsNullOrEmpty(env)
                     && !notSpecifyEnv.Equals(env)
-                    && targetEnvs.Count > 0)
+                    && targetEnvs?.Count > 0)
                  {
                      isActive = targetEnvs.Contains(env);
                  }
@@ -102,7 +102,7 @@ namespace Yozian.DependencyInjectionPlus
                  {
                      ServiceImplementType = t,
                      DiAttribute = attrType,
-                     DiScope = attr.DiScope,
+                     DiScope = attr?.DiScope,
                      Interfaces = attr?.ServiceTypes,
                      IsActive = isActive
                  };

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Threading.Tasks;
 
 namespace Yozian.DependencyInjectionPlus.Utility
 {
@@ -11,34 +10,34 @@ namespace Yozian.DependencyInjectionPlus.Utility
         public static IEnumerable<Type> GetAllTypesOfInterface<T>()
         {
             return GetAllExportedTypes()
-                    .Where(t => typeof(T).IsAssignableFrom(t));
+               .Where(t => typeof(T).IsAssignableFrom(t));
         }
 
         public static IEnumerable<Type> GetAllTypesOfInterface<T>(Assembly assembly)
         {
             return GetAllExportedTypes(assembly)
-                    .Where(t => typeof(T).IsAssignableFrom(t));
+               .Where(t => typeof(T).IsAssignableFrom(t));
         }
 
         public static IEnumerable<Type> GetAllTypesByAttribute<TAttribute>(string assemblyPrefixName)
-                where TAttribute : Attribute
+            where TAttribute : Attribute
         {
             return GetAllExportedTypes(assemblyPrefixName)
-                    .Where(t => t.IsDefined(typeof(TAttribute)));
+               .Where(t => t.IsDefined(typeof(TAttribute)));
         }
 
         public static IEnumerable<Type> GetAllTypesByBaseAttribute<TAttribute>(string assemblyPrefixName)
-        where TAttribute : Attribute
+            where TAttribute : Attribute
         {
             return GetAllExportedTypes(assemblyPrefixName)
-                    .Where(t => t.IsDefined(typeof(TAttribute)));
+               .Where(t => t.IsDefined(typeof(TAttribute)));
         }
 
         public static IEnumerable<Type> GetAllTypesByAttribute<TAttribute>(Assembly assembly)
-               where TAttribute : Attribute
+            where TAttribute : Attribute
         {
             return GetAllExportedTypes(assembly)
-                    .Where(t => t.IsDefined(typeof(TAttribute)));
+               .Where(t => t.IsDefined(typeof(TAttribute)));
         }
 
         /// <summary>
@@ -51,22 +50,25 @@ namespace Yozian.DependencyInjectionPlus.Utility
             var assemblies = AppDomain.CurrentDomain.GetAssemblies();
 
             return assemblies
-                 .Where(a => !a.FullName.StartsWith("Microsoft"))
-                 .Where(a => !a.FullName.StartsWith("System"))
-                 .Where(a =>
-                 {
-                     var matched = a.FullName.StartsWith(assemblyPrefixName);
-                     return matched;
-                 })
-                 .SelectMany(a => a.ExportedTypes)
-                 .ToList();
+               .Where(a => !a.FullName.StartsWith("Microsoft"))
+               .Where(a => !a.FullName.StartsWith("System"))
+               .Where(
+                    a =>
+                    {
+                        var matched = a.FullName.StartsWith(assemblyPrefixName);
+
+                        return matched;
+                    }
+                )
+               .SelectMany(a => a.ExportedTypes)
+               .ToList();
         }
 
         private static IEnumerable<Type> GetAllExportedTypes(Assembly assembly)
         {
             return assembly
-              .ExportedTypes
-              .ToList();
+               .ExportedTypes
+               .ToList();
         }
     }
 }

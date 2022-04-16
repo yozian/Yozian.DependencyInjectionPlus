@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
-namespace DependencyInjectionSample.Services
+﻿namespace DependencyInjectionSample.Services
 {
-    interface IDriver
+    internal interface IDriver
     {
         void Drive();
     }

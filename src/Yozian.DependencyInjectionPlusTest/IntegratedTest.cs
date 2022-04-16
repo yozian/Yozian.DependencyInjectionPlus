@@ -2,8 +2,6 @@ using System;
 using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Console;
-using Microsoft.Extensions.Options;
 using NUnit.Framework;
 using Yozian.DependencyInjectionPlus;
 using Yozian.DependencyInjectionPlus.Exceptions;
@@ -15,19 +13,15 @@ namespace Yozian.DependencyInjectionPlusTest
     {
         private ServiceProvider provider;
 
-        ILogger logger;
+        private ILogger logger;
 
         [SetUp]
         public void Setup()
         {
-
             Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Production");
 
             var continaer = new ServiceCollection();
-            ILoggerFactory loggerFactory = LoggerFactory.Create((options) => {
-                options.AddConsole();
-            });
-
+            var loggerFactory = LoggerFactory.Create(options => { options.AddConsole(); });
 
             this.logger = loggerFactory.CreateLogger<IntegratedTest>();
 
@@ -41,9 +35,9 @@ namespace Yozian.DependencyInjectionPlusTest
                 this.logger
             );
 
-            provider = continaer.BuildServiceProvider();
+            this.provider = continaer.BuildServiceProvider();
 
-            var mySingleton = provider.GetService<MySingletonService>();
+            var mySingleton = this.provider.GetService<MySingletonService>();
 
             mySingleton.Name = "Setup";
         }
@@ -118,10 +112,7 @@ namespace Yozian.DependencyInjectionPlusTest
             var continaer = new ServiceCollection();
             continaer.RegisterServices(
                 "Yozian.DependencyInjectionPlusTest",
-                t =>
-                {
-                    return t.Name.Contains("MyIgnoreSvc");
-                }
+                t => { return t.Name.Contains("MyIgnoreSvc"); }
             );
 
             var provider = continaer.BuildServiceProvider();
@@ -141,10 +132,7 @@ namespace Yozian.DependencyInjectionPlusTest
                     var continaer = new ServiceCollection();
                     continaer.RegisterServices(
                         "Yozian.DependencyInjectionPlusTest",
-                        t =>
-                        {
-                            return t.Name.Contains("HashNonImplementInterfaceSvc");
-                        }
+                        t => { return t.Name.Contains("HashNonImplementInterfaceSvc"); }
                     );
                 }
             );
@@ -153,24 +141,22 @@ namespace Yozian.DependencyInjectionPlusTest
         [Test]
         public void SpecifyEnvActiveDevTest()
         {
-            var svc = provider.GetService<MySpecifyEnvDevService>();
+            var svc = this.provider.GetService<MySpecifyEnvDevService>();
 
             svc.DoWork();
-
         }
 
         [Test]
         public void SpecifyEnvNonActiveTest()
         {
+            Assert.Throws<NullReferenceException>(
+                () =>
+                {
+                    var svc = this.provider.GetService<MySpecifyEnvStagingService>();
 
-            Assert.Throws<NullReferenceException>(() =>
-            {
-                var svc = provider.GetService<MySpecifyEnvStagingService>();
-
-                svc.DoWork();
-
-            });
-
+                    svc.DoWork();
+                }
+            );
         }
     }
 }

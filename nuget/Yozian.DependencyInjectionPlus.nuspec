@@ -15,8 +15,8 @@
     <tags>DI Auto Register By Attribute</tags>
     <dependencies>
       <dependency id="Yozian.Extension" version="2.*" />
-      <dependency id="Microsoft.Extensions.DependencyInjection" version="[1.1,6)" />
-      <dependency id="Microsoft.Extensions.Logging" version="[3.1,6)" />
+      <dependency id="Microsoft.Extensions.DependencyInjection" version="[1.1,7)" />
+      <dependency id="Microsoft.Extensions.Logging" version="[3.1,7)" />
     </dependencies>
     <repository type="git" commit="" url="https://github.com/yozian/Yozian.DependencyInjectionPlus"></repository>
   </metadata>

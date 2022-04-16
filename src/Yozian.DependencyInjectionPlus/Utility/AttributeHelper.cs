@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Yozian.DependencyInjectionPlus.Utility
 {
@@ -12,28 +10,39 @@ namespace Yozian.DependencyInjectionPlus.Utility
         /// <summary>
         /// Gets an attribute value on an instance's field
         /// </summary>
-        public static TAttr GetAttribute<T, TAttr>(this T @this) where TAttr : Attribute
+        public static TAttr GetAttribute<T, TAttr>(this T @this)
+            where TAttr : Attribute
         {
             return @this.GetType()
-                     .GetMember(@this.ToString())
-                     .First()
-                     .GetCustomAttributes(typeof(TAttr), false)
-                     .First() as TAttr;
+               .GetMember(@this.ToString())
+               .First()
+               .GetCustomAttributes(typeof(TAttr), false)
+               .First() as TAttr;
         }
 
-        public static IEnumerable<PropertyInfo> GetPropertyInfoByAttr<T>(this object @this) where T : Attribute
+        public static IEnumerable<PropertyInfo> GetPropertyInfoByAttr<T>(this object @this)
+            where T : Attribute
         {
-            var props = @this.GetType().GetProperties().Where(
-                prop => Attribute.IsDefined(prop, typeof(T)));
+            var props = @this.GetType()
+               .GetProperties()
+               .Where(
+                    prop => Attribute.IsDefined(prop, typeof(T))
+                );
+
             return props;
         }
 
         public static IEnumerable<PropertyInfo> GetPropertyInfoByAttr(
             this object @this,
-            Type attrType)
+            Type attrType
+        )
         {
-            var props = @this.GetType().GetProperties().Where(
-                prop => Attribute.IsDefined(prop, attrType));
+            var props = @this.GetType()
+               .GetProperties()
+               .Where(
+                    prop => Attribute.IsDefined(prop, attrType)
+                );
+
             return props;
         }
     }

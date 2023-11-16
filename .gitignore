@@ -340,5 +340,4 @@ ASALocalRun/
 # BeatPulse healthcheck temp database 
 healthchecksdb
 
-nuget/**/*.nupkg
-nuget/**/*.dll
+nuget/**

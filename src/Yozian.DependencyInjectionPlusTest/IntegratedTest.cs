@@ -20,12 +20,12 @@ namespace Yozian.DependencyInjectionPlusTest
         {
             Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Production");
 
-            var continaer = new ServiceCollection();
+            var container = new ServiceCollection();
             var loggerFactory = LoggerFactory.Create(options => { options.AddConsole(); });
 
             this.logger = loggerFactory.CreateLogger<IntegratedTest>();
 
-            continaer.RegisterServices(
+            container.RegisterServices(
                 "Yozian.DependencyInjectionPlusTest", // leave empty for all assemblies loaded!
                 t => // leave empty for all types with specify attribute to be registered
                 {
@@ -35,7 +35,7 @@ namespace Yozian.DependencyInjectionPlusTest
                 this.logger
             );
 
-            this.provider = continaer.BuildServiceProvider();
+            this.provider = container.BuildServiceProvider();
 
             var mySingleton = this.provider.GetService<MySingletonService>();
 
@@ -43,7 +43,7 @@ namespace Yozian.DependencyInjectionPlusTest
         }
 
         [Test]
-        public void ConcreTypeDiTest()
+        public void ConcreteTypeDiTest()
         {
             var service = this.provider.GetService<MyTransientService>();
 
@@ -109,15 +109,15 @@ namespace Yozian.DependencyInjectionPlusTest
         [Test]
         public void InjectFilterTest()
         {
-            var continaer = new ServiceCollection();
-            continaer.RegisterServices(
+            var container = new ServiceCollection();
+            container.RegisterServices(
                 "Yozian.DependencyInjectionPlusTest",
-                t => { return t.Name.Contains("MyIgnoreSvc"); }
+                t => t.Name.Contains("MyIgnoreSvc")
             );
 
-            var provider = continaer.BuildServiceProvider();
+            var p = container.BuildServiceProvider();
 
-            var service = provider.GetService<MyIgnoreSvc>();
+            var service = p.GetService<MyIgnoreSvc>();
 
             Assert.AreEqual(typeof(MyIgnoreSvc), service.GetType());
         }
@@ -129,10 +129,10 @@ namespace Yozian.DependencyInjectionPlusTest
                 typeof(NonImplementedInterfaceProvidedException),
                 () =>
                 {
-                    var continaer = new ServiceCollection();
-                    continaer.RegisterServices(
+                    var container = new ServiceCollection();
+                    container.RegisterServices(
                         "Yozian.DependencyInjectionPlusTest",
-                        t => { return t.Name.Contains("HashNonImplementInterfaceSvc"); }
+                        t => t.Name.Contains("HashNonImplementInterfaceSvc")
                     );
                 }
             );

@@ -14,10 +14,9 @@ namespace Yozian.DependencyInjectionPlus
     public static class IServiceCollectionExtension
     {
         /// <summary>
-        ///
         /// </summary>
         /// <param name="assemblyPrefix">filter out the matched assemblies</param>
-        /// <param name="filter">determin which service type should be regitered</param>
+        /// <param name="filter">determine which service type should be registered</param>
         /// <returns></returns>
         public static IServiceCollection RegisterServices(
             this IServiceCollection @this,
@@ -27,20 +26,20 @@ namespace Yozian.DependencyInjectionPlus
         )
         {
             var types = AssemblyHelper.GetAllTypesByBaseAttribute<ServiceAttribute>(assemblyPrefix)
-               .AsQueryable()
-               .WhereWhen(null != filter, t => filter(t))
-               .AsEnumerable();
+                .AsQueryable()
+                .WhereWhen(null != filter, t => filter(t))
+                .AsEnumerable();
 
-            registerTypes(@this, types, logger);
+            RegisterTypes(@this, types, logger);
 
             return @this;
         }
 
         /// <summary>
-        ///  scan services with di attributes in the assembly
+        /// scan services with di attributes in the assembly
         /// </summary>
         /// <param name="assembly"></param>
-        /// <param name="filter">determine which service type should be regitered</param>
+        /// <param name="filter">determine which service type should be registered</param>
         /// <param name="logger"></param>
         /// <returns></returns>
         public static IServiceCollection RegisterServicesOfAssembly(
@@ -51,16 +50,16 @@ namespace Yozian.DependencyInjectionPlus
         )
         {
             var types = AssemblyHelper.GetAllTypesByAttribute<ServiceAttribute>(assembly)
-               .AsQueryable()
-               .WhereWhen(null != filter, t => filter(t))
-               .AsEnumerable();
+                .AsQueryable()
+                .WhereWhen(null != filter, t => filter(t))
+                .AsEnumerable();
 
-            registerTypes(@this, types, logger);
+            RegisterTypes(@this, types, logger);
 
             return @this;
         }
 
-        private static void registerTypes(IServiceCollection container, IEnumerable<Type> types, ILogger logger)
+        private static void RegisterTypes(IServiceCollection container, IEnumerable<Type> types, ILogger logger)
         {
             var notSpecifyEnv = "not-specified-env";
             var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? notSpecifyEnv;
@@ -68,20 +67,20 @@ namespace Yozian.DependencyInjectionPlus
             logger?.LogInformation($"DI Process Env: {env}");
 
             types
-               .Select(
+                .Select(
                     t =>
                     {
                         var attrType = t.CustomAttributes
-                           .First(x => x.AttributeType.IsSubclassOf(typeof(ServiceAttribute)))
-                           .AttributeType;
+                            .First(x => x.AttributeType.IsSubclassOf(typeof(ServiceAttribute)))
+                            .AttributeType;
 
                         var attr = t.GetCustomAttribute(attrType, false) as ServiceAttribute;
 
                         var targetEnvs = attr?.ActiveEnvs
-                           .SafeToString()
-                           .Split(',')
-                           .Where(x => !string.IsNullOrEmpty(x))
-                           .ToList();
+                            .SafeToString()
+                            .Split(',')
+                            .Where(x => !string.IsNullOrEmpty(x))
+                            .ToList();
 
                         // available for non-specified env
                         var isActive = notSpecifyEnv.Equals(env);
@@ -108,10 +107,10 @@ namespace Yozian.DependencyInjectionPlus
                         };
                     }
                 )
-               .Where(x => x.IsActive)
-               .GroupBy(x => x.DiScope)
-               .OrderBy(x => x.Key)
-               .ForEach(
+                .Where(x => x.IsActive)
+                .GroupBy(x => x.DiScope)
+                .OrderBy(x => x.Key)
+                .ForEach(
                     g =>
                     {
                         Func<Type, Type, IServiceCollection> register = null;
@@ -136,43 +135,43 @@ namespace Yozian.DependencyInjectionPlus
 
                         logger?.LogInformation($"Register {g.Key} Services , Total: {g.Count()}");
 
-                        logger?.LogInformation("\t [ConcretType : SerivceTypes]");
+                        logger?.LogInformation("\t [ConcreteType : ServiceTypes]");
 
                         g.ForEach(
                             (x, num) =>
                             {
-                                // register for concret type
+                                // register for concrete type
                                 register(x.ServiceImplementType, x.ServiceImplementType);
 
                                 // make sure all provided interface are implemented by the service!
                                 var implementedInterfaces = x.ServiceImplementType
-                                   .GetInterfaces()
-                                   .Select(i => i.FullName)
-                                   .ToList();
+                                    .GetInterfaces()
+                                    .Select(i => i.FullName)
+                                    .ToList();
 
                                 var notMatchedInterfaces = x.Interfaces?
-                                   .Where(i => !implementedInterfaces.Contains(i.FullName))
-                                   .ToList();
+                                    .Where(i => !implementedInterfaces.Contains(i.FullName))
+                                    .ToList();
 
                                 if (null != notMatchedInterfaces && notMatchedInterfaces.Count > 0)
                                 {
                                     throw new NonImplementedInterfaceProvidedException(
-                                        $"{x.ServiceImplementType.Name} has NOT implement of [{string.Join(",", notMatchedInterfaces)}] but provied in {x.DiAttribute.Name} "
+                                        $"{x.ServiceImplementType.Name} has NOT implement of [{string.Join(",", notMatchedInterfaces)}] but provide in {x.DiAttribute.Name} "
                                     );
                                 }
 
                                 // register for interfaces
                                 x.Interfaces?.ForEach(i => register(i, x.ServiceImplementType));
 
-                                var reigsterTypes = new List<string>()
+                                var registeredTypes = new List<string>
                                     {
                                         x.ServiceImplementType.Name
                                     }
-                                   .Concat((x.Interfaces ?? new List<Type>()).Select(i => i.Name))
-                                   .ToList();
+                                    .Concat((x.Interfaces ?? new List<Type>()).Select(i => i.Name))
+                                    .ToList();
 
                                 logger?.LogInformation(
-                                    $"\t ({num + 1}) {x.ServiceImplementType.Name}: {string.Join(", ", reigsterTypes)}"
+                                    $"\t ({num + 1}) {x.ServiceImplementType.Name}: {string.Join(", ", registeredTypes)}"
                                 );
                             }
                         );

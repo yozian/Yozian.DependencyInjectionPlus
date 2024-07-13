@@ -99,6 +99,29 @@ namespace Yozian.DependencyInjectionPlusTest
         }
 
         [Test]
+        public void SingletonIdentifyByInterfacesTest()
+        {
+            var service = this.provider.GetService<MySingletonService>();
+
+            var service1 = this.provider.GetService<IAnimal>();
+
+            var service2 = this.provider.GetService<IFly>();
+
+            Assert.AreEqual("Setup", service.Name);
+
+
+            service.Name = "Next";
+
+
+            Assert.AreEqual(service.Name, service1.Name);
+            Assert.AreEqual(service.Name, service2.Name);
+
+            //
+            Assert.AreEqual(service.GetHashCode(), service1.GetHashCode());
+            Assert.AreEqual(service.GetHashCode(), service2.GetHashCode());
+        }
+
+        [Test]
         public void ShouldFilterOutTest()
         {
             var service = this.provider.GetService<MyIgnoreSvc>();

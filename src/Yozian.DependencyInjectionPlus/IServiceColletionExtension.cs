@@ -113,65 +113,99 @@ namespace Yozian.DependencyInjectionPlus
                 .ForEach(
                     g =>
                     {
-                        Func<Type, Type, IServiceCollection> register = null;
-
-                        switch (g.Key)
-                        {
-                            case DiScope.Transient:
-                                register = container.AddTransient;
-
-                                break;
-
-                            case DiScope.Scoped:
-                                register = container.AddScoped;
-
-                                break;
-
-                            case DiScope.Singleton:
-                                register = container.AddSingleton;
-
-                                break;
-                        }
-
                         logger?.LogInformation($"Register {g.Key} Services , Total: {g.Count()}");
 
                         logger?.LogInformation("\t [ConcreteType : ServiceTypes]");
 
                         g.ForEach(
-                            (x, num) =>
+                            (item, num) =>
                             {
                                 // register for concrete type
-                                register(x.ServiceImplementType, x.ServiceImplementType);
+                                switch (g.Key)
+                                {
+                                    case DiScope.Transient:
+                                        container.AddTransient(item.ServiceImplementType, item.ServiceImplementType);
+
+                                        break;
+
+                                    case DiScope.Scoped:
+                                        container.AddScoped(item.ServiceImplementType, item.ServiceImplementType);
+
+                                        break;
+
+                                    case DiScope.Singleton:
+                                        container.AddSingleton(item.ServiceImplementType, item.ServiceImplementType);
+
+                                        break;
+                                }
 
                                 // make sure all provided interface are implemented by the service!
-                                var implementedInterfaces = x.ServiceImplementType
+                                var implementedInterfaces = item.ServiceImplementType
                                     .GetInterfaces()
                                     .Select(i => i.FullName)
                                     .ToList();
 
-                                var notMatchedInterfaces = x.Interfaces?
+                                var notMatchedInterfaces = item.Interfaces?
                                     .Where(i => !implementedInterfaces.Contains(i.FullName))
                                     .ToList();
 
                                 if (null != notMatchedInterfaces && notMatchedInterfaces.Count > 0)
                                 {
                                     throw new NonImplementedInterfaceProvidedException(
-                                        $"{x.ServiceImplementType.Name} has NOT implement of [{string.Join(",", notMatchedInterfaces)}] but provide in {x.DiAttribute.Name} "
+                                        $"{item.ServiceImplementType.Name} has NOT implement of [{
+                                            string.Join(",", notMatchedInterfaces)}] but provide in {
+                                                item.DiAttribute.Name
+                                            } "
                                     );
                                 }
 
                                 // register for interfaces
-                                x.Interfaces?.ForEach(i => register(i, x.ServiceImplementType));
+                                item.Interfaces?.ForEach(
+                                    interfaceType =>
+                                    {
+                                        // we should use this to make sure
+                                        // that injection either by the class type or by the interfaces
+                                        // are refer to the same instance
+                                        switch (g.Key)
+                                        {
+                                            case DiScope.Transient:
+                                                container.AddTransient(
+                                                    interfaceType,
+                                                    p => p.GetRequiredService(item.ServiceImplementType)
+                                                );
+
+                                                break;
+
+                                            case DiScope.Scoped:
+                                                container.AddScoped(
+                                                    interfaceType,
+                                                    p => p.GetRequiredService(item.ServiceImplementType)
+                                                );
+
+                                                break;
+
+                                            case DiScope.Singleton:
+                                                container.AddSingleton(
+                                                    interfaceType,
+                                                    p => p.GetRequiredService(item.ServiceImplementType)
+                                                );
+
+                                                break;
+                                        }
+                                    }
+                                );
 
                                 var registeredTypes = new List<string>
                                     {
-                                        x.ServiceImplementType.Name
+                                        item.ServiceImplementType.Name
                                     }
-                                    .Concat((x.Interfaces ?? new List<Type>()).Select(i => i.Name))
+                                    .Concat((item.Interfaces ?? new List<Type>()).Select(i => i.Name))
                                     .ToList();
 
                                 logger?.LogInformation(
-                                    $"\t ({num + 1}) {x.ServiceImplementType.Name}: {string.Join(", ", registeredTypes)}"
+                                    $"\t ({num + 1}) {item.ServiceImplementType.Name}: {
+                                        string.Join(", ", registeredTypes)
+                                    }"
                                 );
                             }
                         );

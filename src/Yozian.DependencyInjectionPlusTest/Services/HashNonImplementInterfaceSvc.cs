@@ -19,5 +19,8 @@ namespace Yozian.DependencyInjectionPlusTest.Services
         public void Eat()
         {
         }
+
+        /// <inheritdoc />
+        public string Name { get; set; }
     }
 }

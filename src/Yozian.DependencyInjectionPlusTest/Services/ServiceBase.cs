@@ -2,7 +2,7 @@
 
 namespace Yozian.DependencyInjectionPlusTest.Services
 {
-    public class ServiceBase
+    public class ServiceBase: IName
     {
         public string Name { get; set; } = "default";
 

@@ -1,6 +1,6 @@
 ﻿namespace Yozian.DependencyInjectionPlusTest.Services
 {
-    internal interface IFly
+    internal interface IFly: IName
     {
         void Fly();
     }

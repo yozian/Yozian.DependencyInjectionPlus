@@ -341,3 +341,5 @@ ASALocalRun/
 healthchecksdb
 
 nuget/**
+*.nupkg
+*.snupkg

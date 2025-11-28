@@ -14,11 +14,14 @@ echo "pack with commit: $commit"
 
 sed -i -e "s/commit=\"*\"/commit=\"$commit\"/g" nuget/Yozian.DependencyInjectionPlus.nuspec
 
+# move old package away
+shopt -s nullglob
+
+mkdir -p legacy-version
+mv nuget/*.nupkg legacy-version/
+
 cd nuget
 
-# move old package away
-mkdir -p legacy-version
-move *.nupkg legacy-version/
 
 nuget pack -version $1
 

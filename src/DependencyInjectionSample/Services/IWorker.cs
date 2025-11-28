@@ -1,7 +1,6 @@
-﻿namespace DependencyInjectionSample.Services
+﻿namespace DependencyInjectionSample.Services;
+
+public interface IWorker
 {
-    public interface IWorker
-    {
-        void DoWork();
-    }
+    void DoWork();
 }

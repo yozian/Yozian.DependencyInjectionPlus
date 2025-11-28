@@ -1,14 +1,13 @@
 ﻿using Yozian.DependencyInjectionPlus.Attributes;
 
-namespace Yozian.DependencyInjectionPlusTest.Services
+namespace Yozian.DependencyInjectionPlusTest.Services;
+
+[TransientService(
+    typeof(IAnimal)
+)]
+public class MyIgnoreSvc : ServiceBase, IAnimal
 {
-    [TransientService(
-        typeof(IAnimal)
-    )]
-    public class MyIgnoreSvc : ServiceBase, IAnimal
+    public void Eat()
     {
-        public void Eat()
-        {
-        }
     }
 }

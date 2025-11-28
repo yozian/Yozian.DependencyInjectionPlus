@@ -1,7 +1,6 @@
-﻿namespace Yozian.DependencyInjectionPlusTest.Services
+﻿namespace Yozian.DependencyInjectionPlusTest.Services;
+
+internal interface IAnimal : IName
 {
-    internal interface IAnimal: IName
-    {
-        void Eat();
-    }
+    void Eat();
 }

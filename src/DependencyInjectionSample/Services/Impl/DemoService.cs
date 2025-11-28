@@ -1,14 +1,13 @@
 ﻿using System;
 using Yozian.DependencyInjectionPlus.Attributes;
 
-namespace DependencyInjectionSample.Services.Impl
+namespace DependencyInjectionSample.Services.Impl;
+
+[TransientService]
+public class DemoService
 {
-    [TransientService]
-    public class DemoService
+    public void ShowTime()
     {
-        public void ShowTime()
-        {
-            Console.WriteLine(DateTime.Now.ToString());
-        }
+        Console.WriteLine(DateTime.Now.ToString());
     }
 }

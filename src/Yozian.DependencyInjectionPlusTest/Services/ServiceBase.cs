@@ -1,21 +1,20 @@
 ﻿using System;
 
-namespace Yozian.DependencyInjectionPlusTest.Services
+namespace Yozian.DependencyInjectionPlusTest.Services;
+
+public class ServiceBase : IName
 {
-    public class ServiceBase: IName
+    public string Name { get; set; } = "default";
+
+    public DateTime CreateAt { get; set; }
+
+    public ServiceBase()
     {
-        public string Name { get; set; } = "default";
+        this.CreateAt = DateTime.Now;
+    }
 
-        public DateTime CreateAt { get; set; }
-
-        public ServiceBase()
-        {
-            this.CreateAt = DateTime.Now;
-        }
-
-        public void DoWork()
-        {
-            Console.WriteLine($"{this.GetType().Name}: work {DateTime.Now.ToString("HHmmssfff")}");
-        }
+    public void DoWork()
+    {
+        Console.WriteLine($"{this.GetType().Name}: work {DateTime.Now.ToString("HHmmssfff")}");
     }
 }

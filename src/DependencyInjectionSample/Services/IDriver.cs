@@ -1,7 +1,6 @@
-﻿namespace DependencyInjectionSample.Services
+﻿namespace DependencyInjectionSample.Services;
+
+internal interface IDriver
 {
-    internal interface IDriver
-    {
-        void Drive();
-    }
+    void Drive();
 }

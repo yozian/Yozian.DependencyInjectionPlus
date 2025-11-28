@@ -1,9 +1,8 @@
-﻿namespace Yozian.DependencyInjectionPlus
+﻿namespace Yozian.DependencyInjectionPlus;
+
+internal enum DiScope
 {
-    internal enum DiScope
-    {
-        Transient,
-        Scoped,
-        Singleton
-    }
+    Transient,
+    Scoped,
+    Singleton,
 }

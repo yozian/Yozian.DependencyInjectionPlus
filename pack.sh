@@ -18,13 +18,10 @@ sed -i -e "s/commit=\"*\"/commit=\"$commit\"/g" nuget/Yozian.DependencyInjection
 
 mkdir -p legacy-version
 mv nuget/*.nupkg legacy-version/
+mv nuget/*.snupkg legacy-version/
 
-cd nuget
 
-
-nuget pack -version $1
-
-cd ..
+dotnet pack src/Yozian.DependencyInjectionPlus/Yozian.DependencyInjectionPlus.csproj -p:PackageVersion=$version -o nuget
 
 
 # recover

@@ -16,6 +16,10 @@ sed -i -e "s/commit=\"*\"/commit=\"$commit\"/g" nuget/Yozian.DependencyInjection
 
 cd nuget
 
+# move old package away
+mkdir -p legacy-version
+move *.nupkg legacy-version/
+
 nuget pack -version $1
 
 cd ..
@@ -23,4 +27,3 @@ cd ..
 
 # recover
 git checkout nuget/Yozian.DependencyInjectionPlus.nuspec
-

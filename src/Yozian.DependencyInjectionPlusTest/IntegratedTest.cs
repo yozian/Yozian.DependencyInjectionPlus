@@ -180,4 +180,60 @@ public class IntegratedTest
             }
         );
     }
+
+    [Test]
+    public void ServiceResolverOverridesImplementation()
+    {
+        var callCount = 0;
+        var collection = new ServiceCollection();
+
+        collection.RegisterServices(
+            "Yozian.DependencyInjectionPlusTest",
+            t => t.Name.Contains("Service"),
+            serviceResolver: (provider, serviceType) =>
+            {
+                callCount++;
+
+                if (serviceType == typeof(MyTransientService))
+                {
+                    return new CustomTransientService();
+                }
+
+                return Activator.CreateInstance(serviceType);
+            }
+        );
+
+        var localProvider = collection.BuildServiceProvider();
+
+        var service = localProvider.GetRequiredService<MyTransientService>();
+        var animal = localProvider
+            .GetServices<IAnimal>()
+            .First(a => a is MyTransientService);
+
+        Assert.IsInstanceOf<CustomTransientService>(service);
+        Assert.IsInstanceOf<CustomTransientService>(animal);
+        Assert.Greater(callCount, 0);
+    }
+
+    [Test]
+    public void ServiceResolverInstanceOverridesImplementation()
+    {
+        var collection = new ServiceCollection();
+
+        collection.RegisterServices(
+            "Yozian.DependencyInjectionPlusTest",
+            t => t.Name.Contains("Service"),
+            serviceResolverInstance: new CustomTransientServiceResolver()
+        );
+
+        var localProvider = collection.BuildServiceProvider();
+
+        var service = localProvider.GetRequiredService<MyTransientService>();
+        var animal = localProvider
+            .GetServices<IAnimal>()
+            .First(a => a is MyTransientService);
+
+        Assert.IsInstanceOf<CustomTransientService>(service);
+        Assert.IsInstanceOf<CustomTransientService>(animal);
+    }
 }

@@ -17,12 +17,17 @@ public static class IServiceCollectionExtension
     /// </summary>
     /// <param name="assemblyPrefix">filter out the matched assemblies</param>
     /// <param name="filter">determine which service type should be registered</param>
+    /// <param name="logger">optional logger for diagnostics</param>
+    /// <param name="serviceResolver">custom resolver for the concrete service instance</param>
+    /// <param name="serviceResolverInstance">instance that implements IServiceResolver for custom instantiation</param>
     /// <returns></returns>
     public static IServiceCollection RegisterServices(
         this IServiceCollection @this,
         string assemblyPrefix = "",
         Func<Type, bool> filter = null,
-        ILogger logger = null
+        ILogger logger = null,
+        Func<IServiceProvider, Type, object> serviceResolver = null,
+        IServiceResolver serviceResolverInstance = null
     )
     {
         var types = AssemblyHelper.GetAllTypesByBaseAttribute<ServiceAttribute>(assemblyPrefix)
@@ -33,7 +38,9 @@ public static class IServiceCollectionExtension
         RegisterTypes(
             @this,
             types,
-            logger
+            logger,
+            serviceResolver,
+            serviceResolverInstance
         );
 
         return @this;
@@ -45,12 +52,16 @@ public static class IServiceCollectionExtension
     /// <param name="assembly"></param>
     /// <param name="filter">determine which service type should be registered</param>
     /// <param name="logger"></param>
+    /// <param name="serviceResolver">custom resolver for the concrete service instance</param>
+    /// <param name="serviceResolverInstance">instance that implements IServiceResolver for custom instantiation</param>
     /// <returns></returns>
     public static IServiceCollection RegisterServicesOfAssembly(
         this IServiceCollection @this,
         Assembly assembly,
         Func<Type, bool> filter = null,
-        ILogger logger = null
+        ILogger logger = null,
+        Func<IServiceProvider, Type, object> serviceResolver = null,
+        IServiceResolver serviceResolverInstance = null
     )
     {
         var types = AssemblyHelper.GetAllTypesByAttribute<ServiceAttribute>(assembly)
@@ -61,7 +72,9 @@ public static class IServiceCollectionExtension
         RegisterTypes(
             @this,
             types,
-            logger
+            logger,
+            serviceResolver,
+            serviceResolverInstance
         );
 
         return @this;
@@ -70,13 +83,17 @@ public static class IServiceCollectionExtension
     private static void RegisterTypes(
         IServiceCollection container,
         IEnumerable<Type> types,
-        ILogger logger
+        ILogger logger,
+        Func<IServiceProvider, Type, object> serviceResolver,
+        IServiceResolver serviceResolverInstance
     )
     {
         var notSpecifyEnv = "not-specified-env";
         var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? notSpecifyEnv;
 
         logger?.LogInformation($"DI Process Env: {env}");
+
+        var resolver = ComposeServiceResolver(serviceResolver, serviceResolverInstance);
 
         types
             .Select(t =>
@@ -112,7 +129,7 @@ public static class IServiceCollectionExtension
                     {
                         ServiceImplementType = t,
                         DiAttribute = attrType,
-                        attr?.DiScope,
+                        attr.DiScope,
                         Interfaces = attr?.ServiceTypes,
                         IsActive = isActive,
                     };
@@ -130,23 +147,12 @@ public static class IServiceCollectionExtension
                     g.ForEach((item, num) =>
                         {
                             // register for concrete type
-                            switch (g.Key)
-                            {
-                                case DiScope.Transient:
-                                    container.AddTransient(item.ServiceImplementType, item.ServiceImplementType);
-
-                                    break;
-
-                                case DiScope.Scoped:
-                                    container.AddScoped(item.ServiceImplementType, item.ServiceImplementType);
-
-                                    break;
-
-                                case DiScope.Singleton:
-                                    container.AddSingleton(item.ServiceImplementType, item.ServiceImplementType);
-
-                                    break;
-                            }
+                            RegisterServiceImplementType(
+                                container,
+                                g.Key,
+                                item.ServiceImplementType,
+                                resolver
+                            );
 
                             // make sure all provided interface are implemented by the service!
                             var implementedInterfaces = item.ServiceImplementType
@@ -219,5 +225,99 @@ public static class IServiceCollectionExtension
                     );
                 }
             );
+    }
+
+    private static Func<IServiceProvider, Type, object> ComposeServiceResolver(
+        Func<IServiceProvider, Type, object> resolverDelegate,
+        IServiceResolver serviceResolverInstance
+    )
+    {
+        if (resolverDelegate != null && serviceResolverInstance != null)
+        {
+            throw new ArgumentException("Provide either serviceResolver delegate or IServiceResolver instance, not both.");
+        }
+
+        if (serviceResolverInstance == null)
+        {
+            return resolverDelegate;
+        }
+
+        return (provider, serviceType) => serviceResolverInstance.Resolve(provider, serviceType);
+    }
+
+    private static void RegisterServiceImplementType(
+        IServiceCollection container,
+        DiScope scope,
+        Type serviceType,
+        Func<IServiceProvider, Type, object> serviceResolver
+    )
+    {
+        if (null == serviceResolver)
+        {
+            switch (scope)
+            {
+                case DiScope.Transient:
+                    container.AddTransient(serviceType, serviceType);
+
+                    return;
+
+                case DiScope.Scoped:
+                    container.AddScoped(serviceType, serviceType);
+
+                    return;
+
+                case DiScope.Singleton:
+                    container.AddSingleton(serviceType, serviceType);
+
+                    return;
+            }
+        }
+
+        var factory = BuildResolverFactory(serviceType, serviceResolver);
+
+        switch (scope)
+        {
+            case DiScope.Transient:
+                container.AddTransient(serviceType, factory);
+
+                break;
+
+            case DiScope.Scoped:
+                container.AddScoped(serviceType, factory);
+
+                break;
+
+            case DiScope.Singleton:
+                container.AddSingleton(serviceType, factory);
+
+                break;
+        }
+    }
+
+    private static Func<IServiceProvider, object> BuildResolverFactory(
+        Type serviceType,
+        Func<IServiceProvider, Type, object> serviceResolver
+    )
+    {
+        return provider =>
+        {
+            var resolved = serviceResolver(provider, serviceType);
+
+            if (null == resolved)
+            {
+                throw new InvalidOperationException(
+                    $"serviceResolver should not return null for {serviceType.FullName}"
+                );
+            }
+
+            if (!serviceType.IsInstanceOfType(resolved))
+            {
+                throw new InvalidOperationException(
+                    $"serviceResolver result {resolved.GetType().FullName} is not assignable to {serviceType.FullName}"
+                );
+            }
+
+            return resolved;
+        };
     }
 }

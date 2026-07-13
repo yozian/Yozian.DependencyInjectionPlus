@@ -1,4 +1,4 @@
-# Make Dependency Injection Easily
+﻿# Make Dependency Injection Easily
 
 # Features
 
@@ -180,6 +180,10 @@ Register Scoped Services , Total: 1
      [ConcretType : SerivceTypes]
      (1) WorkService: WorkService, IWorker
 ```
+
+## License
+
+MIT. See the `LICENSE` file for details.
 
 
 

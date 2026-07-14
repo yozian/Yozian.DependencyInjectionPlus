@@ -1,0 +1,108 @@
+﻿name: publish-nuget
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: NuGet package version to publish
+        required: true
+        type: string
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: nuget
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      PROJECT_PATH: src/Yozian.DependencyInjectionPlus/Yozian.DependencyInjectionPlus.csproj
+      TEST_PATH: src/Yozian.DependencyInjectionPlusTest/Yozian.DependencyInjectionPlusTest.csproj
+      ARTIFACTS_DIR: artifacts
+      NUGET_SOURCE: https://api.nuget.org/v3/index.json
+      NUGET_USERNAME: ${{ vars.NUGET_USERNAME }}
+      INPUT_VERSION: ${{ github.event.inputs.version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Resolve package version
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+          version_pattern='^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?(\+[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?$'
+
+          version="$INPUT_VERSION"
+          if [[ "${GITHUB_REF_TYPE:-}" == "tag" ]]; then
+            version="${GITHUB_REF_NAME#v}"
+          fi
+
+          if [[ -z "$version" ]]; then
+            echo "::error::No package version was provided. Use workflow_dispatch input 'version' or push a tag like v10.0.2."
+            exit 1
+          fi
+
+          if [[ ! "$version" =~ $version_pattern ]]; then
+            echo "::error::Version '$version' is invalid. Use semantic version format like 10.0.2, 10.0.2-preview.1, or 10.0.2-preview.1+build.5."
+            exit 1
+          fi
+
+          echo "Resolved package version: $version"
+          echo "value=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Validate NuGet username variable
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ -z "$NUGET_USERNAME" ]]; then
+            echo "::error::NuGet username is empty. Set repository variable NUGET_USERNAME to your nuget.org profile name before publishing."
+            exit 1
+          fi
+
+          echo "Using NuGet username: $NUGET_USERNAME"
+
+      - name: Restore
+        run: dotnet restore "$TEST_PATH"
+
+      - name: Test
+        run: dotnet test "$TEST_PATH" -c Release --no-restore
+
+      - name: Pack
+        run: dotnet pack "$PROJECT_PATH" -c Release --no-restore -p:PackageVersion="${{ steps.version.outputs.value }}" -p:ContinuousIntegrationBuild=true -o "$ARTIFACTS_DIR"
+
+      - name: List artifacts
+        run: ls -1 "$ARTIFACTS_DIR"
+
+      - name: NuGet login
+        id: login
+        uses: NuGet/login@v1
+        with:
+          user: ${{ vars.NUGET_USERNAME }}
+
+      - name: Push package and symbols
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          dotnet nuget push "$ARTIFACTS_DIR"/*.nupkg \
+            --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" \
+            --source "$NUGET_SOURCE" \
+            --skip-duplicate
+
+          dotnet nuget push "$ARTIFACTS_DIR"/*.snupkg \
+            --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" \
+            --source "$NUGET_SOURCE" \
+            --skip-duplicate

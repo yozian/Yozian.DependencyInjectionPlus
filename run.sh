@@ -1,7 +1,8 @@
-#!/bin/bash
+﻿#!/bin/bash
 set -euo pipefail
 
 PROJECT_NAME="Yozian.DependencyInjectionPlus"
+DEFAULT_GIT_REMOTE="github"
 
 PROJECT_CS_PROJ="src/$PROJECT_NAME/$PROJECT_NAME.csproj"
 NUSPEC_FILE="nuget/$PROJECT_NAME.nuspec"
@@ -13,11 +14,11 @@ Usage: ./run.sh <build|pack|publish> [version]
 Commands:
   build                 Compile the library and refresh nuget/lib artifacts.
   pack    <version>     Pack the project into nuget/*.nupkg using the given version.
-  publish <version>     Push the specified package to nuget.org.
+   publish <version>     Tag the current commit and push the current branch to GitHub.
 
 Notes:
   - pack/publish require a semantic version argument (e.g. 10.0.0-preview).
-  - publish expects NUGET_API_KEY to be exported in the environment.
+   - publish expects a clean git working tree and a Git remote named 'github' or 'origin'.
 EOF
 }
 
@@ -87,12 +88,24 @@ run_build() {
    find nuget/lib/netstandard2.0/ -type f ! -name "$PROJECT_NAME*" -exec rm -f {} +
 }
 
+validate_version() {
+   local version="$1"
+   local version_pattern='^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?(\+[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?$'
+
+   if [[ ! "$version" =~ $version_pattern ]]; then
+      echo "version '$version' is invalid. Use semantic version format like 10.0.2, 10.0.2-preview.1, or 10.0.2-preview.1+build.5."
+      exit 1
+   fi
+}
+
 run_pack() {
    local version="${1:-}"
    if [ -z "$version" ]; then
       echo "version should be provided!"
       exit 1
    fi
+
+   validate_version "$version"
 
    local commit
    commit=$(git rev-parse --short HEAD)
@@ -115,6 +128,28 @@ run_pack() {
    git checkout -- "$NUSPEC_FILE"
 }
 
+resolve_git_remote() {
+   if git remote get-url "$DEFAULT_GIT_REMOTE" >/dev/null 2>&1; then
+      printf '%s\n' "$DEFAULT_GIT_REMOTE"
+      return 0
+   fi
+
+   if git remote get-url origin >/dev/null 2>&1; then
+      printf '%s\n' "origin"
+      return 0
+   fi
+
+   echo "No Git remote named '$DEFAULT_GIT_REMOTE' or 'origin' was found."
+   exit 1
+}
+
+ensure_clean_worktree() {
+   if [ -n "$(git status --short)" ]; then
+      echo "Git working tree has uncommitted changes. Commit or stash them before publishing."
+      exit 1
+   fi
+}
+
 run_publish() {
    local version="${1:-}"
    if [ -z "$version" ]; then
@@ -122,23 +157,41 @@ run_publish() {
       exit 1
    fi
 
-   local package_path="nuget/$PROJECT_NAME.$version.nupkg"
-   if [ ! -f "$package_path" ]; then
-      echo "package $package_path not found. Run the pack command first."
+   validate_version "$version"
+
+   local current_branch
+   current_branch=$(git branch --show-current)
+   if [ -z "$current_branch" ]; then
+      echo "publish requires a checked-out branch; detached HEAD is not supported."
       exit 1
    fi
 
-   if [ -z "${NUGET_API_KEY:-}" ]; then
-      echo "NUGET_API_KEY environment variable must be set before publishing."
+   ensure_clean_worktree
+
+   local remote_name tag_name
+   remote_name=$(resolve_git_remote)
+   tag_name="v$version"
+
+   if git show-ref --verify --quiet "refs/tags/$tag_name"; then
+      echo "tag $tag_name already exists locally."
       exit 1
    fi
 
-   dotnet nuget push "$package_path" --source https://api.nuget.org/v3/index.json --api-key "$NUGET_API_KEY"
+   if [ -n "$(git ls-remote --tags "$remote_name" "refs/tags/$tag_name")" ]; then
+      echo "tag $tag_name already exists on remote $remote_name."
+      exit 1
+   fi
 
-   if command -v nuget >/dev/null 2>&1; then
-      nuget push "$package_path" -source https://api.nuget.org/v3/index.json
+   echo "Creating tag $tag_name on branch $current_branch"
+   git tag -a "$tag_name" -m "Release $tag_name"
+
+   if git push --atomic "$remote_name" "$current_branch" "$tag_name"; then
+      echo "Pushed branch $current_branch and tag $tag_name to $remote_name."
+      echo "GitHub Actions publish-nuget workflow should start shortly."
    else
-      echo "nuget CLI not found; skipped secondary nuget push command."
+      git tag -d "$tag_name" >/dev/null 2>&1 || true
+      echo "Push failed. Removed local tag $tag_name."
+      exit 1
    fi
 }
 

@@ -1,0 +1,27 @@
+<Project>
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <!-- IsPackable (set per-project) isn't visible yet at this point in evaluation,
+             so packable-vs-test is inferred from the project naming convention instead. -->
+        <IsTestProject Condition="$(MSBuildProjectName.EndsWith('Test'))">true</IsTestProject>
+    </PropertyGroup>
+
+    <!-- $(Configuration) also isn't reliably available this early, so unlike the original
+         per-project csproj files, these settings are not split into Debug/Release blocks;
+         both configurations used the same values anyway. -->
+    <PropertyGroup Condition="'$(IsTestProject)' != 'true'">
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <IncludeSymbols>true</IncludeSymbols>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <WarningLevel>3</WarningLevel>
+        <NoWarn>1701;1702;</NoWarn>
+    </PropertyGroup>
+
+    <ItemGroup Condition="'$(IsTestProject)' != 'true'">
+        <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
+    </ItemGroup>
+
+</Project>

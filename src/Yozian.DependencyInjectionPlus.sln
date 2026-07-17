@@ -15,8 +15,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Development", "Development"
 		..\nuget\Yozian.DependencyInjectionPlus.nuspec = ..\nuget\Yozian.DependencyInjectionPlus.nuspec
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DependencyInjectionSample", "DependencyInjectionSample\DependencyInjectionSample.csproj", "{D5BDB35F-E9FC-47AF-9582-27829A51048F}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Yozian.DependencyInjectionPlusTest", "Yozian.DependencyInjectionPlusTest\Yozian.DependencyInjectionPlusTest.csproj", "{56D9DB7C-9A2D-4048-B3C1-A48F0B2FC2CA}"
 EndProject
 Global
